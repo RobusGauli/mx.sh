@@ -4,7 +4,7 @@ if [[ "$EUID" -ne 0 ]]; then
   exec sudo -- "$0" "$@"
 fi
 
-if [[ $(uname) -eq "Darwin" ]]; then
+if [[ $(uname) = "Darwin" ]]; then
   BIN=/usr/local/bin
 else
   BIN=/usr/bin
