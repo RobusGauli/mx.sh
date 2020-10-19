@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+{
 
 os=$(uname)
+
 if [[ "$os" = "Darwin" ]]; then
   BIN=/usr/local/bin
   CURL=curl
@@ -19,3 +21,5 @@ fi
 echo "Installing with"
 $CURL -s https://raw.githubusercontent.com/RobusGauli/mx.sh/master/mx.sh?token=ADDJYDQUXQCMVDIS6WQNB2S7RWP3G -o $BIN/mx && chmod +x $BIN/mx
 echo "with successfully installed!"
+
+}
