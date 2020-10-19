@@ -17,5 +17,5 @@ else
 fi
 
 echo "Installing with"
-$CURL -s https://raw.githubusercontent.com/robusgauli/mx.sh/master/mx.sh -o $BIN/mx && chmod +x $BIN/mx
+$CURL -s https://raw.githubusercontent.com/RobusGauli/mx.sh/master/mx.sh?token=ADDJYDQUXQCMVDIS6WQNB2S7RWP3G -o $BIN/mx && chmod +x $BIN/mx
 echo "with successfully installed!"
