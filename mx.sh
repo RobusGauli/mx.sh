@@ -10,141 +10,6 @@ NC="\033[0m"
 BGREEN='\033[1;32m'
 
 
-pyparser() {
-python - "$@" <<END
-#!/usr/bin/env python
-
-import json
-import sys
-import yaml
-
-def print_help():
-    help_msg = '''
- pipe - commandline JSON processor using list comprehension
-
- USAGE: python pipe.py [FLAGS] <code>
-
- Example: python pipe.py -f yaml 'x.upper() for x in data'
-
- some of the options include:
-    -f, --format available formats yaml, json
-    -j, --json-dump dump the output in json format
-    -l, --len returns length of list
-    -a, --any returns true if any of the item in the list is true
-    -e, --eval evaluates without list comprehension
-'''
-    print(help_msg)
-
-defaults_mapping = {
-        str: "",
-        bool: False,
-        int: 0,
-        float: 0.0,
-        list: []
-}
-
-def make_default(_type):
-    value = defaults_mapping.get(_type)
-    if value is None:
-        raise TypeError("flag not supported")
-    return value
-
-class Flag:
-
-    def __init__(self, name, short, long, type=str, default=None):
-        self.name = name
-        self.short = short
-        self.long = long
-        self._type = type
-        self.default = default
-        if self.default is None or not isinstance(self.default, self._type):
-            self.default = make_default(self._type)
-
-    def matches(self, arg):
-        return arg == self.short or arg == self.long
-
-format = Flag("format", "-f", "--format", type=str, default='json')
-json_dump = Flag('jsondump', '-j', '--json-dump', type=bool, default=False)
-_any = Flag('any', '-a', '--any', type=bool, default=False)
-_len = Flag('len', '-l', '--len', type=bool, default=False)
-_eval = Flag('eval', '-e', '--eval', type=bool, default=False)
-flags = [format, json_dump, _any, _len, _eval]
-
-def find_flag(flag):
-    matched_flag = None
-    for f in flags:
-        if f.matches(flag):
-            matched_flag = f
-            break
-    return matched_flag
-
-class ParseError(Exception):
-    pass
-
-def _help(flag):
-    return flag == '--help' or flag == '-h'
-
-def parse_flags(arguments):
-    res = {flag.name: flag.default for flag in flags}
-    code = ''
-    while arguments:
-        flag = arguments.pop(0)
-        if _help(flag):
-            print_help()
-            sys.exit(0)
-        matched_flag = find_flag(flag)
-        if matched_flag is None:
-            if not len(arguments):
-                code = flag
-                break
-            return None, None, ParseError("unknown option")
-        if matched_flag._type == bool:
-            res[matched_flag.name] = True
-            continue
-        if not len(arguments):
-            return None, None,  ParseError("unknown option")
-        value = arguments.pop(0)
-        res[matched_flag.name] = value
-    return res, code, None
-
-
-def main():
-    if len(sys.argv) <= 1:
-        print_help()
-        sys.exit(0)
-    arguments = sys.argv[1:]
-    flags, code,  err = parse_flags(arguments)
-    if err:
-        print(err)
-        sys.exit(1)
-    raw_data = open("mxconf.yaml").read()
-    if flags['format'].upper() == 'JSON':
-        data = json.loads(raw_data)
-    elif flags['format'].upper() == 'YAML':
-        data = yaml.safe_load(raw_data)
-    else:
-        print('unknown formatter')
-        sys.exit(1)
-
-
-    if flags.get('eval'):
-        code = '{}'.format(code)
-    else:
-        code = '[{}]'.format(code)
-
-    if flags['any']:
-        code = 'any({})'.format(code)
-    if flags['len']:
-        code = 'len({})'.format(code)
-    out = eval(code)
-    if flags['jsondump']:
-        print(json.dumps(out))
-    else:
-        print(eval(code))
-main()
-END
-}
-
 # Name of the configuration file
 CONFIG_FILE=${MX_CONFIG_FILE:-mxconf.yaml}
 
@@ -167,13 +32,32 @@ createSession() {
 
 getPaneVal() {
 
-  local windowIndex="$1"
-  local paneIndex="$2"
-  local key="$3"
-  local val
-  val=$(pyparser -e -f yaml "data.get('windows')[$windowIndex].get('panes')[$paneIndex].get('$key')")
-  echo "$val"
+python - "$@" <<end
+#! /usr/bin/env python
+import yaml
+import sys
+parsed = yaml.safe_load(open('mxconf.yaml'))
+windowindex, paneindex, key = sys.argv[1:]
+print(parsed["windows"][int(windowindex)]["panes"][int(paneindex)].get(key))
+end
+
 }
+
+panesCount() {
+
+python - "$@" <<end
+#! /usr/bin/env python
+import yaml
+import sys
+parsed = yaml.safe_load(open('mxconf.yaml'))
+windowindex,  = sys.argv[1:]
+print(len(parsed["windows"][int(windowindex)]["panes"]))
+end
+
+}
+
+
+
 
 createPane() {
   local session="$1"
@@ -198,7 +82,7 @@ createPane() {
   if [ "$paneIndex" -eq 0 ]; then
     tmux new-window -c "$expandedPath" -n "$window" -t "${session}:${windowIndex}"
   else
-    if [ "$size" = "None" ]; then
+    if [ "_$size" = "_None" ]; then
       size="50"
     fi
     if [ $(( "$paneIndex" % 2)) -eq 0 ]; then
@@ -222,7 +106,7 @@ createWindow() {
   local configIndex="$(("$count" - 2))"
 
   local numOfPanes
-  numOfPanes=$(pyparser -f yaml --len "x for x in data.get('windows')[${configIndex}].get('panes')")
+  numOfPanes=$(panesCount "$configIndex")
 
   ((numOfPanes--))
 
@@ -259,19 +143,17 @@ isVerbose() {
   return 1
 }
 
-valFromConfig() {
-  local key="$1"
 
-  local value
-  value=$(pyparser -e -f yaml "data.get('$key')")
+sessionName() {
 
-  if [ "$value" = "None" ]; then
-    return 1
-  fi
+python - <<END
+#! /usr/bin/env python
+import yaml
+parsed = yaml.safe_load(open('mxconf.yaml'))
+print(parsed['session'])
+END
 
-  echo "$value"
 }
-
 # Returns name of the session. It tries to parse from the command line argument and fallbacks to yaml configuration.
 getSession() {
   if [ -n "${startArguments['session']}" ]; then
@@ -280,7 +162,7 @@ getSession() {
   fi
 
   local session
-  session=$(valFromConfig "session")
+  session=$(sessionName)
 
   if [ -z "$session" ]; then
     return 1
@@ -297,6 +179,17 @@ attachDuringStart() {
   return 1
 }
 
+
+getWindows() {
+
+python - <<END
+#! /usr/bin/env python
+import yaml
+parsed = yaml.safe_load(open('mxconf.yaml'))
+print('\n'.join([ window['name'] for window in parsed["windows"] ]))
+END
+
+}
 _up() {
   local session
   session=$(getSession)
@@ -320,7 +213,7 @@ _up() {
   echo "creating new session..."
   createSession "$session"
 
-  windows=$(pyparser -e -f yaml "'\n'.join(x.get('name') for x in data.get('windows'))")
+  windows=$(getWindows)
   createWindows "$session" "$windows"
 
   # attach it to the session
