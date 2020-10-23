@@ -190,6 +190,7 @@ print('\n'.join([ window['name'] for window in parsed["windows"] ]))
 END
 
 }
+
 _up() {
   local session
   session=$(getSession)
@@ -503,6 +504,78 @@ printHelp() {
   echo "print help message"
 }
 
+declare -A templateArguments=(
+  ["project"]="mxproject"
+)
+
+template() {
+  if ! renderTemplate "${templateArguments['project']}"; then
+    return 1
+  fi
+  #echo "${templateArguments['project']}"
+}
+
+printTemplateHelp() {
+  echo "print template help"
+}
+
+renderTemplate() {
+  if [[ -f "mxconf.yaml" ]]; then
+    echoerr "'mxconf.yaml' file already exists"
+    exit 120
+  fi
+  local projectName="$1"
+cat <<END >mxconf.yaml
+session: $projectName
+windows:
+  - name: w1
+    panes:
+      - workdir: "$(pwd)"
+        command: echo "Hey from pane 1"
+      - workdir: "$(pwd)"
+        command: echo "Hi from pane 2"
+  - name: w2
+    panes:
+      - workdir: "$(pwd)"
+        command: cal
+      - workdir: "$(pwd)"
+        size: 20
+        command: |-
+          python
+      - workdir: "$(pwd)"
+        command: |-
+          ls
+END
+
+}
+
+parseTemplateCommandArguments() {
+  while [[ -n $1 ]]; do
+    case "$1" in
+
+    "--project" | "-p")
+      shift
+      templateArguments["project"]="$1"
+      shift
+      ;;
+
+    "help" | "-h" | "--help")
+      printTemplateHelp
+      exit
+      ;;
+
+    "--verbose" | "-v")
+      shift
+      globalArguments["verbose"]=1
+      ;;
+
+    *)
+      echoerr "unknown argument: ${1}"
+      exit 1
+      ;;
+    esac
+  done
+}
 # will be set by parseCommand
 currentCommand=""
 
@@ -533,6 +606,12 @@ parseCommand() {
     shift
     parseDownCommandArguments "$@"
     currentCommand="down"
+    ;;
+
+  "template")
+    shift
+    parseTemplateCommandArguments "$@"
+    currentCommand="template"
     ;;
 
   "help")
@@ -568,6 +647,10 @@ main() {
 
   "down")
     down
+    ;;
+
+  "template")
+    template
     ;;
 
   "help")
