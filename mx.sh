@@ -377,8 +377,8 @@ attach() {
   local sessionIndex="${attachArguments['index']}"
 
   if ! isNumber "$sessionIndex"; then
-    echoerr "invalid '--index' argument, number required"
-    exit 1
+    tmux attach-session
+    exit 0
   fi
 
   # valid index argument
@@ -386,8 +386,8 @@ attach() {
   totalSessions=$(tmux list-sessions | wc -l)
 
   if [[ "$sessionIndex" -ge "totalSessions" ]]; then
-     echoerr "invalid '--index' argument, index must be in range"
-     exit 1
+    echoerr "invalid '--index' argument, index must be in range"
+    exit 1
   fi
 
   i=0
@@ -412,11 +412,14 @@ printAttachHelp() {
   mxecho
   mxecho 'Options:'
   mxecho '  --index/-i NUMBER       Attach to the session identified by integer value. Eg: 1'
+  mxecho '  --session/-s TEXT       Attach to the session identified by the name'
   mxecho '  --verbose/-v            Enable verbose mode'
   mxecho '  --help/-h               Show the help message for down subcommand'
   mxecho
   mxecho 'Examples:'
-  mxecho '  mx attach -i 0          Attach to the session identified by index 0'
+  mxecho '  mx attach                 Attach to last session'
+  mxecho '  mx attach -s mxproject    Attach to session named "mxproject"'
+  mxecho '  mx attach -i 0            Attach to the session identified by index 0'
 }
 
 parseAttachCommandArguments() {
