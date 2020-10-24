@@ -131,7 +131,7 @@ createWindows() {
   local windows="$2"
 
   # starting from index 2 as session creation creates a window with index 1
-  local index=2
+  local index=1
 
   for window in $windows; do
     createWindow "$session" "$window" "$index"
@@ -612,7 +612,7 @@ declare -A templateArguments=(
 )
 
 template() {
-  if ! renderTemplate "${templateArguments['project']}"; then
+  if ! renderTemplate "${templateArguments['session']}"; then
     return 1
   fi
 
@@ -662,6 +662,12 @@ windows:
         command: |-
           ls
 END
+
+cat <<END
+A 'mxconf.yaml' file has been placed in this directory. You are now
+ready to 'mx up'! Please run 'mx up' --help for more details usage.
+END
+
 }
 
 parseTemplateCommandArguments() {
