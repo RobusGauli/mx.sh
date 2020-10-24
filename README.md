@@ -1,9 +1,6 @@
 
 ![MIT License][license-shield]
 
-![mx.sh](https://i.imgur.com/lO3kVya.png)
-
-
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
