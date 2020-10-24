@@ -13,6 +13,14 @@ BGREEN='\033[1;32m'
 # Name of the configuration file
 CONFIG_FILE=${MX_CONFIG_FILE:-mxconf.yaml}
 
+echoerr() {
+  cat <<<"$@" 1>&2;
+}
+
+mxecho() {
+  command printf %s\\n "$*" 2>/dev/null
+}
+
 green() {
   printf "$BGREEN%s$NC" "$1"
 }
@@ -55,9 +63,6 @@ print(len(parsed["windows"][int(windowindex)]["panes"]))
 end
 
 }
-
-
-
 
 createPane() {
   local session="$1"
@@ -126,7 +131,6 @@ createWindows() {
   done
 }
 
-echoerr() { cat <<<"$@" 1>&2; }
 
 isEmpty() {
   local val="$1"
@@ -233,7 +237,20 @@ declare -A startArguments=(
 )
 
 printUpCommandHelp() {
-  echo "start command help"
+  mxecho 'Usage: mx up [Options]...'
+  mxecho
+  mxecho '  Starts and provision new mx session'
+  mxecho
+  mxecho 'Options:'
+  mxecho '  --attach/-a             If set, attach to current session automatically'
+  mxecho '  --session/-s STRING     Assign a name to new mx session'
+  mxecho '  --verbose/-v            Enable verbose mode'
+  mxecho '  --help/-h               Show the help message for up subcommand'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx up --session euler --attach    Starts the new session named "euler" and attach to it'
+  mxecho '  mx up                             Starts the new session without attaching to it'
+  mxecho '  mx up -v                          Starts the new session in verbose mode'
 }
 
 parseUpCommandArguments() {
@@ -273,7 +290,8 @@ parseUpCommandArguments() {
 up() {
   # requires config file to be on the current directory
   if ! [ -e "$CONFIG_FILE" ]; then
-    echoerr "configuration file not found: 'mxconf.yaml'"
+    echoerr "configuration file not found: 'mxconf.yaml'."
+    echoerr "Run 'mx template --project <name>' to generate template configuration."
     exit 1
   fi
   _up
@@ -501,7 +519,24 @@ parseDownCommandArguments() {
 }
 
 printHelp() {
-  echo "print help message"
+  mxecho 'Usage: mx COMMAND [ARGS]...'
+  mxecho
+  mxecho 'Commands:'
+  mxecho '  up         Starts and provision new mx session'
+  mxecho '  down       Teardown active mx session'
+  mxecho '  list       List active mx sessions'
+  mxecho '  attach     Attach to one of the active mx session'
+  mxecho '  template   Generate a template config file for mx session'
+  mxecho '  help       Show the help message for a command'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx template --project euler       Generate a new template for project euler'
+  mxecho '  mx up --attach                    Starts the new session and automatically attach to it'
+  mxecho '  mx attach -i 0                    Attach to session whose index is 0'
+  mxecho '  mx down --all                     Destroy all active sessions'
+  mxecho '  mx up help                        Show the help message for up subcommand'
+  mxecho '  mx list --help                    Show the help message for list subcommand'
+
 }
 
 declare -A templateArguments=(
