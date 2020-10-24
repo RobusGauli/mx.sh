@@ -298,7 +298,16 @@ up() {
 }
 
 printListHelp() {
-  printf "printing list help\n"
+  mxecho 'Usage: mx list [Options]...'
+  mxecho
+  mxecho '  List active mx session(s)'
+  mxecho
+  mxecho 'Options:'
+  mxecho '  --verbose/-v            Enable verbose mode'
+  mxecho '  --help/-h               Show the help message for down subcommand'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx list                 Show current active session(s)'
 }
 
 parseListCommandArguments() {
@@ -337,39 +346,6 @@ _list() {
     echo "$(green ${index}) => ${session}"
     index=$(("$index" + 1))
   done < <(tmux list-sessions)
-
-  #if [[ $1 = "kill" ]]; then
-  #tmux kill-server
-  #return 0
-  #fi
-  #if ! [[ $1 =~ '^[0-9]+$' ]]; then
-  #echo "error: argument must be number" >&2
-  #return 1
-  #fi
-  #if tmux list-sessions 2>/dev/null >/dev/null; then
-  #local sessionIndex="$1"
-  #local sessions="$(tmux list-sessions)"
-  #local numOfSessions="$(tmux list-sessions | wc -l)"
-  #local index=0
-  #local parsedSessionLabel=""
-  #if [[ -n "${sessionIndex}" ]]; then
-  #if [[ "$sessionIndex" -lt "$numOfSessions" ]]; then
-  #local counter=0
-  #while IFS= read -r session; do
-  #if [[ "$counter" -eq "$sessionIndex" ]]; then
-  #local sessionLabel="$(grep -o '.*:\s' <<< $session)"
-  #parsedSessionLabel="${sessionLabel%:*}"
-  #break
-  #fi
-  #((counter++))
-  #done <<< "$sessions"
-  #fi
-  #fi
-  #fi
-  #if [[ -n $parsedSessionLabel ]]; then
-  #tmux attach-session -t "${parsedSessionLabel}"
-  #fi
-  #print the list of currently running session with it's index
 }
 
 declare -A attachArguments=(
@@ -430,7 +406,17 @@ attach() {
 }
 
 printAttachHelp() {
-  echo "this is going to be attach help"
+  mxecho 'Usage: mx attach [Options]...'
+  mxecho
+  mxecho '  Attach to one of the running active mx session(s)'
+  mxecho
+  mxecho 'Options:'
+  mxecho '  --index/-i NUMBER       Attach to the session identified by integer value. Eg: 1'
+  mxecho '  --verbose/-v            Enable verbose mode'
+  mxecho '  --help/-h               Show the help message for down subcommand'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx attach -i 0          Attach to the session identified by index 0'
 }
 
 parseAttachCommandArguments() {
@@ -482,7 +468,17 @@ down() {
 }
 
 printDownHelp() {
-  echo "print down help"
+  mxecho 'Usage: mx down [Options]...'
+  mxecho
+  mxecho '  Teardown active mx session(s)'
+  mxecho
+  mxecho 'Options:'
+  mxecho '  --all/-a                Teardown all active mx session(s)'
+  mxecho '  --verbose/-v            Enable verbose mode'
+  mxecho '  --help/-h               Show the help message for down subcommand'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx down --all           Teardown all active mx session(s)'
 }
 
 parseDownCommandArguments() {
@@ -540,7 +536,7 @@ printHelp() {
 }
 
 declare -A templateArguments=(
-  ["project"]="mxproject"
+  ["session"]="mxsession"
 )
 
 template() {
@@ -551,7 +547,17 @@ template() {
 }
 
 printTemplateHelp() {
-  echo "print template help"
+  mxecho 'Usage: mx template [Options]...'
+  mxecho
+  mxecho '  Generate mx template to bootstrap your session'
+  mxecho
+  mxecho 'Options:'
+  mxecho '  --session/-s STRING     Set a session name'
+  mxecho '  --verbose/-v            Enable verbose mode'
+  mxecho '  --help/-h               Show the help message for up subcommand'
+  mxecho
+  mxecho 'Examples:'
+  mxecho '  mx template --session euler       Create a template file with session name "euler"'
 }
 
 renderTemplate() {
@@ -559,9 +565,9 @@ renderTemplate() {
     echoerr "'mxconf.yaml' file already exists"
     exit 120
   fi
-  local projectName="$1"
+  local sessionName="$1"
 cat <<END >mxconf.yaml
-session: $projectName
+session: $sessionName
 windows:
   - name: w1
     panes:
@@ -588,9 +594,9 @@ parseTemplateCommandArguments() {
   while [[ -n $1 ]]; do
     case "$1" in
 
-    "--project" | "-p")
+    "--session" | "-s")
       shift
-      templateArguments["project"]="$1"
+      templateArguments["session"]="$1"
       shift
       ;;
 
