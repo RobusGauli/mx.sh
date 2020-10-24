@@ -27,9 +27,11 @@ green() {
 
 hasSession() {
   local session=$1
+
   if tmux has-session -t "$session" >/dev/null 2>&1; then
     return 0
   fi
+
   return 1
 }
 
@@ -65,6 +67,7 @@ end
 }
 
 createPane() {
+  # Positional arguments
   local session="$1"
   local window="$2"
   local windowIndex="$3"
@@ -78,12 +81,13 @@ createPane() {
 
   local size
   size="$(getPaneVal "$windowConfigIndex" "$paneIndex" "size")"
+
   local expandedPath="${workDir/#\~/$HOME}"
 
   local command
   command="$(getPaneVal "$windowConfigIndex" "$paneIndex" "command")"
 
-  # TODO: not happy with how command are passed into pane
+  # TODO: Not happy with how command are passed into pane
   if [ "$paneIndex" -eq 0 ]; then
     tmux new-window -c "$expandedPath" -n "$window" -t "${session}:${windowIndex}"
   else
@@ -97,7 +101,7 @@ createPane() {
     fi
   fi
 
-  # send keys to pane
+  # Send keys to pane
   local paneTmuxIndex
   paneTmuxIndex="$(("$paneIndex" + 1))"
 
@@ -105,9 +109,11 @@ createPane() {
 }
 
 createWindow() {
+  # Positional arguments
   local session="$1"
   local window="$2"
   local count="$3"
+
   local configIndex="$(("$count" - 2))"
 
   local numOfPanes
@@ -123,8 +129,10 @@ createWindow() {
 createWindows() {
   local session="$1"
   local windows="$2"
+
   # starting from index 2 as session creation creates a window with index 1
   local index=2
+
   for window in $windows; do
     createWindow "$session" "$window" "$index"
     ((index++))
@@ -134,9 +142,11 @@ createWindows() {
 
 isEmpty() {
   local val="$1"
+
   if [ "$val" = "" ]; then
     return 0
   fi
+
   return 1
 }
 
@@ -144,6 +154,7 @@ isVerbose() {
   if [ "${globalArguments['verbose']}" -eq 1 ]; then
     return 0
   fi
+
   return 1
 }
 
@@ -180,6 +191,7 @@ attachDuringStart() {
   if [ "${startArguments['attach']}" -eq 1 ]; then
     return 0
   fi
+
   return 1
 }
 
@@ -210,6 +222,7 @@ _up() {
       tmux attach-session -t "$session"
       exit 0
     fi
+
     echoerr "session: '${session}' already exists"
     exit 1
   fi
@@ -222,7 +235,9 @@ _up() {
   createWindows "$session" "$windows"
 
   # attach it to the session
-  if attachDuringStart; then tmux attach-session -t "$session"; fi
+  if attachDuringStart; then
+    tmux attach-session -t "$session"
+  fi
 }
 
 declare -A globalArguments=(
@@ -333,15 +348,13 @@ parseListCommandArguments() {
 }
 
 list() {
-  _list
-}
-
-_list() {
   if ! tmux list-sessions >/dev/null 2>/dev/null; then
     echo "session(s) not found"
     return 1
   fi
+
   local index=0
+
   while IFS= read -r session; do
     echo "$(green ${index}) => ${session}"
     index=$(("$index" + 1))
@@ -355,9 +368,11 @@ declare -A attachArguments=(
 
 isNumber() {
   local arg="$1"
+
   if [[ "$arg" =~ ^[0-9]+$ ]]; then
     return 0
   fi
+
   return 1
 }
 
@@ -392,6 +407,7 @@ attach() {
 
   i=0
   local sessionLabel=""
+
   while IFS= read -r s; do
     if [[ "$i" -eq "$sessionIndex" ]]; then
       sessionLabel="$(grep -oP '^.*(?=:\s)' <<< "$s")"
@@ -456,17 +472,61 @@ parseAttachCommandArguments() {
   done
 }
 
-
 declare -A downArguments=(
   ["all"]=0
   ["index"]=""
+  ["session"]=""
 )
 
 down() {
   local all
   all="${downArguments['all']}"
+
   if [[ "${all}" -eq 1 ]]; then
     tmux kill-server
+    exit 0
+  fi
+
+  if ! tmux list-sessions >/dev/null 2>&1; then
+    echo "no active session(s) to teardown"
+    exit 1
+  fi
+
+  local session="${downArguments['session']}"
+
+  if [[ -n "$session" ]]; then
+    tmux kill-session -t "$session"
+    exit
+  fi
+
+  local sessionIndex="${downArguments['index']}"
+
+  if ! isNumber "$sessionIndex"; then
+    echoerr "invalid '--index' argument"
+    exit 1
+  fi
+
+  # valid index argument
+  local totalSessions
+  totalSessions=$(tmux list-sessions | wc -l)
+
+  if [[ "$sessionIndex" -ge "totalSessions" ]]; then
+    echoerr "invalid '--index' argument, index must be in range"
+    exit 1
+  fi
+
+  i=0
+  local sessionLabel=""
+  while IFS= read -r s; do
+    if [[ "$i" -eq "$sessionIndex" ]]; then
+      sessionLabel="$(grep -oP '^.*(?=:\s)' <<< "$s")"
+      break
+    fi
+    i=$(("$i" + 1))
+  done < <(tmux list-sessions)
+
+  if [[ -n "$sessionLabel" ]]; then
+    tmux kill-session -t "$sessionLabel"
   fi
 }
 
@@ -477,11 +537,15 @@ printDownHelp() {
   mxecho
   mxecho 'Options:'
   mxecho '  --all/-a                Teardown all active mx session(s)'
+  mxecho '  --index/-i              Teardown session indentified by index. Eg: 1'
+  mxecho '  --session/-s            Teardown session indentified by name. Eg: "mxsession"'
   mxecho '  --verbose/-v            Enable verbose mode'
   mxecho '  --help/-h               Show the help message for down subcommand'
   mxecho
   mxecho 'Examples:'
-  mxecho '  mx down --all           Teardown all active mx session(s)'
+  mxecho '  mx down --all                Teardown all active mx session(s)'
+  mxecho '  mx down --session mxproject  Teardown session named "mxproject"'
+  mxecho '  mx down --i 1                Teardown session indexed 1'
 }
 
 parseDownCommandArguments() {
@@ -496,6 +560,12 @@ parseDownCommandArguments() {
     "--index" | "-i")
       shift
       downArguments["index"]=$1
+      shift
+      ;;
+
+    "--session" | "-s")
+      shift
+      downArguments["session"]=$1
       shift
       ;;
 
@@ -535,7 +605,6 @@ printHelp() {
   mxecho '  mx down --all                     Destroy all active sessions'
   mxecho '  mx up help                        Show the help message for up subcommand'
   mxecho '  mx list --help                    Show the help message for list subcommand'
-
 }
 
 declare -A templateArguments=(
@@ -546,7 +615,8 @@ template() {
   if ! renderTemplate "${templateArguments['project']}"; then
     return 1
   fi
-  #echo "${templateArguments['project']}"
+
+  return 0
 }
 
 printTemplateHelp() {
@@ -568,7 +638,9 @@ renderTemplate() {
     echoerr "'mxconf.yaml' file already exists"
     exit 120
   fi
+
   local sessionName="$1"
+
 cat <<END >mxconf.yaml
 session: $sessionName
 windows:
@@ -590,7 +662,6 @@ windows:
         command: |-
           ls
 END
-
 }
 
 parseTemplateCommandArguments() {
