@@ -48,6 +48,7 @@ import yaml
 import sys
 parsed = yaml.safe_load(open('mxconf.yaml'))
 windowindex, paneindex, key = sys.argv[1:]
+windowindex = int(windowindex) - 1
 print(parsed["windows"][int(windowindex)]["panes"][int(paneindex)].get(key))
 end
 
@@ -60,8 +61,9 @@ python - "$@" <<end
 import yaml
 import sys
 parsed = yaml.safe_load(open('mxconf.yaml'))
-windowindex,  = sys.argv[1:]
-print(len(parsed["windows"][int(windowindex)]["panes"]))
+windowindex, = sys.argv[1:]
+windowindex = int(windowindex) - 1
+print(len(parsed["windows"][windowindex]["panes"]))
 end
 
 }
@@ -74,7 +76,7 @@ createPane() {
   local paneIndex="$4"
 
   local windowConfigIndex
-  windowConfigIndex=$(("$windowIndex"-2))
+  windowConfigIndex=$(("$windowIndex"))
 
   local workDir
   workDir="$(getPaneVal "$windowConfigIndex" "$paneIndex" "workdir")"
@@ -103,7 +105,7 @@ createPane() {
 
   # Send keys to pane
   local paneTmuxIndex
-  paneTmuxIndex="$(("$paneIndex" + 1))"
+  paneTmuxIndex="$(("$paneIndex"))"
 
   tmux send-keys -t "${session}:${windowIndex}.${paneTmuxIndex}" "$command" C-m
 }
@@ -114,11 +116,12 @@ createWindow() {
   local window="$2"
   local count="$3"
 
-  local configIndex="$(("$count" - 2))"
+  local configIndex="$(("$count"))"
 
   local numOfPanes
   numOfPanes=$(panesCount "$configIndex")
 
+  # seq is inclusive
   ((numOfPanes--))
 
   for paneIdx in $(seq 0 "$numOfPanes"); do
@@ -233,6 +236,9 @@ _up() {
 
   windows=$(getWindows)
   createWindows "$session" "$windows"
+
+  # Delete the 0 index window
+  tmux kill-window -t "$session":0
 
   # attach it to the session
   if attachDuringStart; then
@@ -640,7 +646,7 @@ renderTemplate() {
   fi
 
   local sessionName="$1"
-
+  echo "$sessionName"
 cat <<END >mxconf.yaml
 session: $sessionName
 windows:
