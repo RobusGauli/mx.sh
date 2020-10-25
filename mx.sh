@@ -9,9 +9,6 @@ set -Eeo pipefail
 NC="\033[0m"
 BGREEN='\033[1;32m'
 
-# Name of the configuration file
-CONFIG_FILE=${MX_CONFIG_FILE:-mxconf.yaml}
-
 echoerr() {
   cat <<<"$@" 1>&2;
 }
@@ -103,6 +100,10 @@ createPane() {
   local size
   size="$(getPaneVal "$windowConfigIndex" "$paneIndex" "size")"
 
+  if [ "_$size" = "_None" ]; then
+    size="50"
+  fi
+
   local expandedPath="${workDir/#\~/$HOME}"
 
   local command
@@ -112,9 +113,6 @@ createPane() {
   if [ "$paneIndex" -eq 0 ]; then
     tmux new-window -c "$expandedPath" -n "$window" -t "${session}:${windowIndex}"
   else
-    if [ "_$size" = "_None" ]; then
-      size="50"
-    fi
     if [ $(( "$paneIndex" % 2)) -eq 0 ]; then
       tmux split-window -c "$expandedPath" -t "${session}:${windowIndex}" -v -l "$size"
     else
@@ -260,7 +258,7 @@ _up() {
   fi
 
   if hasSession "$session"; then
-    # check to see if we intend to attach to the session
+    # Check to see if we intend to attach to the session
     if attachDuringStart; then
       tmux attach-session -t "$session"
       exit 0
@@ -270,7 +268,7 @@ _up() {
     exit 1
   fi
 
-  # create a new session if it does not exists
+  # Create a new session if it does not exists
   echo "creating new session..."
   createSession "$session"
 
@@ -280,7 +278,7 @@ _up() {
   # Delete the 0 index window
   tmux kill-window -t "$session":0
 
-  # attach it to the session
+  # Attach it to the session if opted
   if attachDuringStart; then
     tmux attach-session -t "$session"
   fi
@@ -347,14 +345,16 @@ parseUpCommandArguments() {
   done
 }
 
-# start entry path
 up() {
-  # requires config file to be on the current directory
+  # Invariant:
+  # Requires config file to be on the current directory
   if ! [ -f "mxconf.yaml" ] &&  ! [ -f "mxconf.json" ]; then
     echoerr "configuration file not found."
     echoerr "Run 'mx template --session <name>' to generate template configuration."
     exit 1
   fi
+
+  # Run the function if invariance is not violated
   _up
 }
 
@@ -442,7 +442,8 @@ attach() {
     exit 0
   fi
 
-  # valid index argument
+  # Invariant:
+  # Valid index argument
   local totalSessions
   totalSessions=$(tmux list-sessions | wc -l)
 
@@ -564,11 +565,14 @@ down() {
   i=0
   local sessionLabel=""
   while IFS= read -r s; do
+
     if [[ "$i" -eq "$sessionIndex" ]]; then
       sessionLabel="$(grep -oP '^.*(?=:\s)' <<< "$s")"
       break
     fi
+
     i=$(("$i" + 1))
+
   done < <(tmux list-sessions)
 
   if [[ -n "$sessionLabel" ]]; then
@@ -645,12 +649,14 @@ printHelp() {
   mxecho '  help       Show the help message for a command'
   mxecho
   mxecho 'Examples:'
-  mxecho '  mx template --project euler       Generate a new template for project euler'
+  mxecho '  mx template --session euler       Generate a new template for project euler'
   mxecho '  mx up --attach                    Starts the new session and automatically attach to it'
   mxecho '  mx attach -i 0                    Attach to session whose index is 0'
   mxecho '  mx down --all                     Destroy all active sessions'
   mxecho '  mx up help                        Show the help message for up subcommand'
   mxecho '  mx list --help                    Show the help message for list subcommand'
+  mxecho '  mx attach                         Attach to session recently created'
+  mxecho '  mx attach --session euler         Attach to session named "euler"'
 }
 
 declare -A templateArguments=(
@@ -681,6 +687,7 @@ printTemplateHelp() {
   mxecho 'Examples:'
   mxecho '  mx template --session euler         Create a template file with session name "euler"'
   mxecho '  mx template --session euler --yaml  Create yaml template file with session name "euler"'
+  mxecho '  mx template --session euler --json  Create json template file with session name "euler"'
 }
 
 renderTemplate() {
