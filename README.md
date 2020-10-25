@@ -24,7 +24,7 @@ curl https://raw.githubusercontent.com/euclideang/mx.sh/master/install.sh | bash
 ## Usage
 #### 1. Generate yaml template
 ```bash
-mx template --project euler
+mx template --session euler
 ```
 #### 2. Start and attach to Session 🚀
 ```bash
