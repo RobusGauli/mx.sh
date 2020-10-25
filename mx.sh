@@ -9,7 +9,6 @@ set -Eeo pipefail
 NC="\033[0m"
 BGREEN='\033[1;32m'
 
-
 # Name of the configuration file
 CONFIG_FILE=${MX_CONFIG_FILE:-mxconf.yaml}
 
@@ -44,9 +43,19 @@ getPaneVal() {
 
 python - "$@" <<end
 #! /usr/bin/env python
-import yaml
+import os
 import sys
-parsed = yaml.safe_load(open('mxconf.yaml'))
+
+def exists(file):
+    return os.path.exists(file)
+
+if exists('mxconf.yaml'):
+    import yaml
+    parsed = yaml.safe_load(open('mxconf.yaml'))
+else:
+    import json
+    parsed = json.load(open('mxconf.json'))
+
 windowindex, paneindex, key = sys.argv[1:]
 windowindex = int(windowindex) - 1
 print(parsed["windows"][int(windowindex)]["panes"][int(paneindex)].get(key))
@@ -58,9 +67,19 @@ panesCount() {
 
 python - "$@" <<end
 #! /usr/bin/env python
-import yaml
+import os
 import sys
-parsed = yaml.safe_load(open('mxconf.yaml'))
+
+def exists(file):
+    return os.path.exists(file)
+
+if exists('mxconf.yaml'):
+    import yaml
+    parsed = yaml.safe_load(open('mxconf.yaml'))
+else:
+    import json
+    parsed = json.load(open('mxconf.json'))
+
 windowindex, = sys.argv[1:]
 windowindex = int(windowindex) - 1
 print(len(parsed["windows"][windowindex]["panes"]))
@@ -166,8 +185,18 @@ sessionName() {
 
 python - <<END
 #! /usr/bin/env python
-import yaml
-parsed = yaml.safe_load(open('mxconf.yaml'))
+import os
+
+def exists(file):
+    return os.path.exists(file)
+
+if exists('mxconf.yaml'):
+    import yaml
+    parsed = yaml.safe_load(open('mxconf.yaml'))
+else:
+    import json
+    parsed = json.load(open('mxconf.json'))
+
 print(parsed['session'])
 END
 
@@ -203,8 +232,19 @@ getWindows() {
 
 python - <<END
 #! /usr/bin/env python
-import yaml
-parsed = yaml.safe_load(open('mxconf.yaml'))
+import os
+import sys
+
+def exists(file):
+    return os.path.exists(file)
+
+if exists('mxconf.yaml'):
+    import yaml
+    parsed = yaml.safe_load(open('mxconf.yaml'))
+else:
+    import json
+    parsed = json.load(open('mxconf.json'))
+
 print('\n'.join([ window['name'] for window in parsed["windows"] ]))
 END
 
@@ -310,9 +350,9 @@ parseUpCommandArguments() {
 # start entry path
 up() {
   # requires config file to be on the current directory
-  if ! [ -e "$CONFIG_FILE" ]; then
-    echoerr "configuration file not found: 'mxconf.yaml'."
-    echoerr "Run 'mx template --project <name>' to generate template configuration."
+  if ! [ -f "mxconf.yaml" ] &&  ! [ -f "mxconf.json" ]; then
+    echoerr "configuration file not found."
+    echoerr "Run 'mx template --session <name>' to generate template configuration."
     exit 1
   fi
   _up
@@ -615,6 +655,7 @@ printHelp() {
 
 declare -A templateArguments=(
   ["session"]="mxsession"
+  ["filetype"]="json"
 )
 
 template() {
@@ -632,21 +673,35 @@ printTemplateHelp() {
   mxecho
   mxecho 'Options:'
   mxecho '  --session/-s STRING     Set a session name'
+  mxecho '  --yaml/-y               If enabled, use yaml configuration'
+  mxecho '  --json/-j               If enabled, use json configuration(default)'
   mxecho '  --verbose/-v            Enable verbose mode'
   mxecho '  --help/-h               Show the help message for up subcommand'
   mxecho
   mxecho 'Examples:'
-  mxecho '  mx template --session euler       Create a template file with session name "euler"'
+  mxecho '  mx template --session euler         Create a template file with session name "euler"'
+  mxecho '  mx template --session euler --yaml  Create yaml template file with session name "euler"'
 }
 
 renderTemplate() {
+
   if [[ -f "mxconf.yaml" ]]; then
     echoerr "'mxconf.yaml' file already exists"
     exit 120
   fi
 
+  if [[ -f "mxconf.json" ]]; then
+    echoerr "'mxconf.json' file already exists"
+    exit 120
+  fi
+
+  filetype="${templateArguments['filetype']}"
+
   local sessionName="$1"
-  echo "$sessionName"
+
+  if [[ "_${filetype}" = "_yaml" ]]; then
+
+
 cat <<END >mxconf.yaml
 session: $sessionName
 windows:
@@ -669,8 +724,51 @@ windows:
           ls
 END
 
+else
+
+cat <<END >mxconf.json
+{
+  "session": "$sessionName",
+  "windows": [
+    {
+      "name": "w1",
+      "panes": [
+        {
+          "workdir": "$(pwd)",
+          "command": "echo \"Hey from pane 1\""
+        },
+        {
+          "workdir": "$(pwd)",
+          "command": "echo \"Hi from pane 2\""
+        }
+      ]
+    },
+    {
+      "name": "w2",
+      "panes": [
+        {
+          "workdir": "$(pwd)",
+          "command": "cal"
+        },
+        {
+          "workdir": "$(pwd)",
+          "size": 20,
+          "command": "python"
+        },
+        {
+          "workdir": "$(pwd)",
+          "command": "ls"
+        }
+      ]
+    }
+  ]
+}
+END
+
+fi
+
 cat <<END
-A 'mxconf.yaml' file has been placed in this directory. You are now
+A 'mxconf.${filetype}' file has been placed in this directory. You are now
 ready to 'mx up'! Please run 'mx up' --help for more details usage.
 END
 
@@ -684,6 +782,16 @@ parseTemplateCommandArguments() {
       shift
       templateArguments["session"]="$1"
       shift
+      ;;
+
+    "--json" | "-j")
+      shift
+      templateArguments["filetype"]="json"
+      ;;
+
+    "--yaml" | "-y")
+      shift
+      templateArguments["filetype"]="yaml"
       ;;
 
     "help" | "-h" | "--help")
