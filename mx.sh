@@ -5,6 +5,8 @@
 
 set -Eeo pipefail
 
+VERSION="v0.2-alpha"
+
 # Color codes
 NC="\033[0m"
 BGREEN='\033[1;32m'
@@ -819,6 +821,11 @@ parseTemplateCommandArguments() {
     esac
   done
 }
+
+printVersion(){
+  mxecho "$VERSION"
+}
+
 # will be set by parseCommand
 currentCommand=""
 
@@ -855,6 +862,11 @@ parseCommand() {
     shift
     parseTemplateCommandArguments "$@"
     currentCommand="template"
+    ;;
+
+  "version")
+    shift
+    currentCommand="version"
     ;;
 
   "help")
@@ -894,6 +906,11 @@ main() {
 
   "template")
     template
+    ;;
+
+  "version")
+    printVersion
+    exit 0
     ;;
 
   "help")
