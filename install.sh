@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+VERSION=$(cat version)
+
 if [[ "$EUID" -ne 0 ]]; then
   exec sudo -- "$0" "$@"
 fi
@@ -10,5 +12,5 @@ else
   BIN=/usr/bin
 fi
 
-curl -s https://raw.githubusercontent.com/euclideang/mx.sh/master/mx.sh -o $BIN/mx && chmod +x $BIN/mx
+curl -s https://raw.githubusercontent.com/euclideang/mx.sh/"${VERSION}"/mx.sh -o ${BIN}/mx && chmod +x ${BIN}/mx
 echo "Installation complete. Type 'mx' to learn more."
