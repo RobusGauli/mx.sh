@@ -648,6 +648,7 @@ printHelp() {
   mxecho '  list       List active mx sessions'
   mxecho '  attach     Attach to one of the active mx session'
   mxecho '  template   Generate a template config file for mx session'
+  mxecho '  version    Show version'
   mxecho '  help       Show the help message for a command'
   mxecho
   mxecho 'Examples:'
