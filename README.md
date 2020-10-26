@@ -56,15 +56,15 @@ mx down --session euler
 
 ## Learn more
 
- Below is the configuration template that is created when you run `mx template --session euler`. This will create a **json** configuration file in your directory where you ran the command called `mxconf.json`. `mx` looks for this file for managing your tmux sesssion.
+ Below is the configuration template that is created when you run `mx template --session euler`. This will create a **json** configuration file called  `mxconf.json` in your directory where you ran the command . `mx` looks for this file for managing your tmux sesssion.
 
-You could use **yaml** instead of **json** for managing your configuration file by addin `--yaml` flag during template generation.
+You could use **yaml** instead of **json** for managing your configuration file by adding `--yaml` flag during template generation.
 ```sh
 mx template --yaml --session novaproject
 ```
 *However, you need to* `pip install pyyaml` *to enable yaml support.*
 
-**NOTE**:  The value of workdir is the path that where you ran `mx template`.  For example,
+**NOTE**:  The value of *workdir* is the path that where you ran `mx template`.  For example,
 `mx template` command ran on `/home/euler/sessions` path.
  ```yaml
 {
@@ -112,7 +112,7 @@ The above configuration file defines following resources:
 * Shell command such as htop, cal, date, python, etc to run on different panes.
 * Working directory for each pane.
 
-This will give you a basic overview of how configuration is defined. You could extend this configuration to  have as many number of windows and panes as you wish. You could also run multiple commands by delimiting using `\n`. Typical example could be initiating vpn connection and starting virtual environment for your python development.
+This will give you a basic overview of how configuration is defined. You could extend this configuration to  have as many number of windows and panes as you wish. You could also run multiple commands by delimiting using `\n`. Typical example would be initiating vpn connection and starting virtual environment for your python development.
 
 Below is the sample configuration using **yaml**
 ```yaml
@@ -217,7 +217,11 @@ mx attach --session mxsession
 ```
 The above command attaches to session named "mxsession"
 
-You could also use index to attach to "mxsession" session by running `mx attach --index 1` If you think this is just too much typing, run `mx attach` and it will simply attach to recently created session.
+You could also use index to attach to "mxsession" session by running
+```bash
+mx attach --index 1
+```
+If you think this is just too much typing, run `mx attach` and it will simply attach to recently created session.
 
 #### Destroying session
 
