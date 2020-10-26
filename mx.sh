@@ -721,14 +721,15 @@ windows:
   - name: w2
     panes:
       - workdir: "$(pwd)"
-        command: cal
+        command: htop
       - workdir: "$(pwd)"
         size: 20
         command: |-
           python
       - workdir: "$(pwd)"
         command: |-
-          ls
+          cal
+          date
 END
 
 else
@@ -755,7 +756,7 @@ cat <<END >mxconf.json
       "panes": [
         {
           "workdir": "$(pwd)",
-          "command": "cal"
+          "command": "htop"
         },
         {
           "workdir": "$(pwd)",
@@ -764,7 +765,7 @@ cat <<END >mxconf.json
         },
         {
           "workdir": "$(pwd)",
-          "command": "ls"
+          "command": "cal\ndate"
         }
       ]
     }
