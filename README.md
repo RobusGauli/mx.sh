@@ -13,6 +13,8 @@
   </p>
 </p>
 
+![mx.sh](https://imgur.com/r9oTAaa.gif)
+
 ###  Why another tmux session manager?
 * It has to work out of box without any bloats.
 * Because, I didn't want runtime dependency such as Ruby interpreter just to manage my tmux sessions.
@@ -43,10 +45,7 @@ mx up
 ```bash
 mx attach
 ```
-
-### And voilaa 🎉  🎉
-
-![mx.sh](https://imgur.com/9WvDOeI.png)
+Congratulations!!
 
 #### To destroy the session
 >Note: You need to [detach](https://superuser.com/questions/249659/how-to-detach-a-tmux-session-that-itself-already-in-a-tmux) from the current tmux session before you can destroy.
