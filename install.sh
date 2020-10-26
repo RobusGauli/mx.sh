@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=$(cat version)
+VERSION="v0.3-alpha"
 
 if [[ "$EUID" -ne 0 ]]; then
   exec sudo -- "$0" "$@"
