@@ -5,7 +5,7 @@
 
 set -Eeo pipefail
 
-VERSION="v0.5-alpha"
+VERSION="v0.6-alpha"
 
 # Color codes
 NC="\033[0m"
