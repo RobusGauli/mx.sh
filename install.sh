@@ -12,5 +12,5 @@ else
   BIN=/usr/bin
 fi
 
-curl -s https://raw.githubusercontent.com/euclideang/mx.sh/"${VERSION}"/mx.sh -o ${BIN}/mx && chmod +x ${BIN}/mx
+curl -s https://raw.githubusercontent.com/RobusGauli/mx.sh/"${VERSION}"/mx.sh -o ${BIN}/mx && chmod +x ${BIN}/mx
 echo "Installation complete. Type 'mx' to learn more."
