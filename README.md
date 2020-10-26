@@ -25,7 +25,7 @@
 Copy paste this in your terminal
 
 ```bash
-curl https://raw.githubusercontent.com/RobusGauli/mx.sh/v0.3-alpha/install.sh | bash
+curl https://raw.githubusercontent.com/RobusGauli/mx.sh/v0.5-alpha/install.sh | bash
 ```
 > This will install `mx`  script in your path. Run `mx` to verify the installation.
 
