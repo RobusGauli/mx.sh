@@ -23,7 +23,7 @@
 Copy paste this in your terminal
 
 ```bash
-curl https://raw.githubusercontent.com/euclideang/mx.sh/master/install.sh | bash
+curl https://raw.githubusercontent.com/euclideang/mx.sh/v0.2-alpha/install.sh | bash
 ```
 > This will install `mx`  script in your path. Run `mx` to verify the installation.
 
