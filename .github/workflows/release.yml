@@ -1,0 +1,24 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bump version to current release tag
+        run: |
+          # update with current release tag
+          ref=${{ github.ref }}
+
+          # ref data format: ref/tags/ so start from 10th index
+          chmod +x bump.sh
+          ./bump.sh ${ref:10}
+
+          # add only updated files
+          git config --global user.email "robusgauli@gmail.com"
+          git config --global user.name "Robus Gauli"
+          git add install.sh mx.sh version README.md
+          git commit -m "Bump the version to ${ref:10}"
+          git push origin master
