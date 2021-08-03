@@ -20,6 +20,9 @@
 * Because, I didn't want runtime dependency such as Ruby interpreter just to manage my tmux sessions.
 * Shell scripting is free and native, lets do more of that.
 
+## Requirements
+- bash >= 4.x
+
 ## Installation
 
 Copy paste this in your terminal
